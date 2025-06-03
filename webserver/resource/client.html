@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html style="width:100%;height:100%">
+  <head>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <!-- Wunderbaum CSS and Library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/wunderbaum@0/dist/wunderbaum.min.css" />
+    <link rel="stylesheet"  href="static/bootstrap/css/bootstrap.min.css" />
+    <style>
+        div.wunderbaum span.wb-col {
+        // overflow : inherit;
+        }
+    </style>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/wunderbaum@0/dist/wunderbaum.umd.min.js"
+    ></script>
+    <!-- <script src="static/bootstrap/js/bootstrap.min.js"></script>-->
+    <script src="static/js/def.js"></script>
+    <script src="static/js/api.js"></script>
+    <script src="static/js/general.js"></script>
+    <script src="static/js/jquery-3.7.1.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", (event) => {
+        const tree = new mar10.Wunderbaum({
+          element: document.getElementById("tree"),
+          source: [],
+          init: (e) => {
+              window.opcuaTree = e.tree;
+              e.tree.setFocus();
+              setTimeout(function(){browseRoot()},1000);
+          },
+          activate: (e) => {
+              browseNode(e.node.data.nodeid)
+          },
+          dnd: {
+              dragStart: (e) => {
+                  //e.event.dataTransfer.effectAllowed = "all";
+                  return true;
+              },
+              dragEnter: (e) => {
+                  e.event.dataTransfer.dropEffect = "copy";
+                  return "over";
+              },
+              drop: (e) => {
+              },
+          },
+        });
+
+        const monitor_item = new mar10.Wunderbaum({
+          element: document.getElementById("monitor_item"),
+          source: [],
+          init: (e) => {
+              window.opcuaMonitorItem = e.tree;
+              e.tree.setFocus();
+          },
+          activate: (e) => {
+              e.node.setFocus();
+          },
+
+          types: {
+              structure: { icon: "bi bi-diagram-3", colspan: true },
+              instance: { icon: "bi bi-microsoft-teams" },
+          },
+          columns: [
+            { title: "Attribute", id: "*", width: 40 },
+            { title: "Value", id: "value", width: 60 },
+          ],
+
+          columnsResizable: true,
+          dnd: {
+              dragStart: (e) => {
+                  return false;
+              },
+              dragEnter: (e) => {
+                  e.event.dataTransfer.dropEffect = "copy";
+                  return "over";
+              },
+              drop: (e) => {
+              },
+          },
+          render: function (e) {
+              const node = e.node;
+              for (const col of Object.values(e.renderColInfosById)) {
+                  // Assumption: we named column.id === node.data.NAME
+                  const val = node.data[col.id];
+                  switch (col.id) {
+                      case "value":
+                      {
+                          col.elem.textContent = JSON.stringify(val);
+                      }
+                      break;
+                      default:
+                         // Assumption: we named column.id === node.data.NAME
+                          col.elem.textContent = val;
+                          break;
+                  }
+              }
+          },
+          keydown: (e) => {
+              // Return false to prevent default behavior
+              if(e.eventName == "Delete"){
+                  if( e.node.data.subid && e.node.data.monid){
+                      delMonitorItem(e.node.data.subid,e.node.data.monid)
+                      e.node.remove();
+                      return false;
+                  }
+              }
+              return true;
+          }
+
+        });
+
+        const monitor_event = new mar10.Wunderbaum({
+          element: document.getElementById("monitor_event"),
+          source: [],
+          init: (e) => {
+              window.opcuaMonitorEvent = e.tree;
+              e.tree.setFocus();
+          },
+          activate: (e) => {
+              e.node.setFocus();
+          },
+
+          types: {
+              structure: { icon: "bi bi-diagram-3", colspan: true },
+              instance: { icon: "bi bi-microsoft-teams" },
+          },
+          columns: [
+            { title: "Attribute", id: "*", width: 40 },
+            { title: "Value", id: "value", width: 60 },
+          ],
+
+          columnsResizable: true,
+          dnd: {
+              dragStart: (e) => {
+                  return false;
+              },
+              dragEnter: (e) => {
+                  e.event.dataTransfer.dropEffect = "copy";
+                  return "over";
+              },
+              drop: (e) => {
+              },
+          },
+          render: function (e) {
+              const node = e.node;
+              for (const col of Object.values(e.renderColInfosById)) {
+                  // Assumption: we named column.id === node.data.NAME
+                  const val = node.data[col.id];
+                  switch (col.id) {
+                      case "value":
+                      {
+                          col.elem.textContent = JSON.stringify(val);
+                      }
+                      break;
+                      default:
+                         // Assumption: we named column.id === node.data.NAME
+                          col.elem.textContent = val;
+                          break;
+                  }
+              }
+          },
+          keydown: (e) => {
+              // Return false to prevent default behavior
+              if(e.eventName == "Delete"){
+                  if( e.node.data.subid && e.node.data.monid){
+                      delMonitorItem(e.node.data.subid,e.node.data.monid)
+                      e.node.remove();
+                      return false;
+                  }
+              }
+              return true;
+          }
+        });
+
+
+        const content =  new mar10.Wunderbaum({
+          id:"content",
+          element: document.getElementById("content"),
+          source: [],
+          init: (e) => {
+              window.opcuaContent = e.tree;
+          },
+          activate: (e) => {
+          },
+          types: {
+              structure: { icon: "bi bi-diagram-3", colspan: true },
+              instance: { icon: "bi bi-microsoft-teams" },
+          },
+          columns: [
+            { title: "Attribute", id: "*", width: 40 },
+            { title: "Value", id: "value", width: 60 },
+          ],
+          columnsResizable: true,
+          columnsSortable: false,        
+          render: function (e) {
+              // console.log(e.type, e.isNew, e);
+              const node = e.node;
+              // const util = e.util;
+              // Render formatted data values for all columns
+              for (const col of Object.values(e.renderColInfosById)) {
+                  // Assumption: we named column.id === node.data.NAME
+                  const val = node.data[col.id];
+                  switch (col.id) {
+                      case "value":
+                      {
+                          col.elem.textContent = val;
+                      }
+                      break;
+                      default:
+                         // Assumption: we named column.id === node.data.NAME
+                         col.elem.textContent = val;
+                          break;
+                  }
+              }
+          },
+
+        });
+
+        let mi = document.getElementById("monitor_item");
+            mi.addEventListener("dragover", (event) => {
+            event.preventDefault();
+        });
+
+        mi.addEventListener("drop", (event) => {
+            event.preventDefault();
+            let obj = JSON.parse(event.dataTransfer.getData("application/x-wunderbaum-node"))
+            addMonitorAttributeVariable(obj.data.nodeid)
+        });
+        let me = document.getElementById("monitor_event");
+            me.addEventListener("dragover", (event) => {
+            event.preventDefault();
+        });
+
+        me.addEventListener("drop", (event) => {
+            event.preventDefault();
+            let obj = JSON.parse(event.dataTransfer.getData("application/x-wunderbaum-node"))
+            addMonitorAttributeEvent(obj.data.nodeid)
+        });
+
+
+      });
+
+    </script>
+  </head>
+
+  <body style="width:100%;height:100%">
+    <div style="width:30%;height:100%;display:inline-block" id="tree" class="wb-skeleton wb-initializing wb-fade-expander"></div>
+    <div style="top:0%;left:30%;width:35%;height:50%;position:absolute;display:inline-block" id="monitor_item"></div>
+    <div style="top:50%;left:30%;width:35%;height:50%;position:absolute;display:inline-block" id="monitor_event"></div>
+    <div style="top:0%;left:65%;width:35%;height:60%;position:absolute;display:inline-block" id="content"></div>
+    <div style="top:60%;left:65%;width:35%;height:40%;position:absolute;display:inline-block;font-size:14px;overflow:auto" id="references">
+
+    <table class="table table-sm">
+        <thead>
+          <tr>
+              <th scope="col">#</th>
+              <th scope="col">ReferenceType</th>
+              <th scope="col">ReferenceName</th>
+          </tr>
+        </thead>
+        <tbody id="refbody">
+        </tbody>
+    </table>
+
+    <template id="refrow">
+        <tr>
+            <th scope="row"></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </template>
+    </div>
+  </body>
+</html>
