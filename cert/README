@@ -1,0 +1,5 @@
+for client 
+sudo ./selfsign.py -c client -u urn:unconfigured:application
+
+for server
+sudo ./selfsign.py -c server -u urn:open62541.server.application
