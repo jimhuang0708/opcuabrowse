@@ -73,3 +73,8 @@ function delMonitorItem(subid,monid){
     pkt.monid = monid
     opcuaws.send(JSON.stringify(pkt));
 }
+
+function writeValue(){
+    let pkt = buildObject();
+    opcuaws.send(JSON.stringify(pkt));
+}

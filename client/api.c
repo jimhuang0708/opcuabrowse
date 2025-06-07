@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "general.h"
 #include <ctype.h>
 #include <sys/ioctl.h>
@@ -95,6 +96,64 @@ int sendJsonObj(cJSON* result_obj , void *sock_ptr) {
     free(outstr);
     return 0;
 }
+
+char* bytes_to_hex(const unsigned char* bytes, size_t len) {
+    char* hex_str = malloc(len * 2 + 1); // Allocate memory for hex string + null terminator
+    if (!hex_str) {
+        return NULL; // Memory allocation failed
+    }
+    for (size_t i = 0; i < len; i++) {
+        snprintf(hex_str + (i * 2), 3, "%02x", bytes[i]);
+    }
+    hex_str[len * 2] = '\0';
+    return hex_str;
+}
+
+unsigned char* hex_to_bytes(const char* hex_str, size_t* len) {
+    size_t hex_len = strlen(hex_str);
+    if (hex_len % 2 != 0) {
+        return NULL; // Invalid hex string length
+    }
+
+    *len = hex_len / 2;
+    unsigned char* bytes = malloc(*len);
+    if (!bytes) {
+        return NULL; // Memory allocation failed
+    }
+
+    for (size_t i = 0; i < *len; i++) {
+        unsigned int byte;
+        sscanf(hex_str + (i * 2), "%2x", &byte);
+        bytes[i] = (unsigned char)byte;
+    }
+    return bytes;
+}
+
+long long iso8601_to_epoch(const char* iso_string) {
+    struct tm timeinfo;
+    int ms;
+    sscanf(iso_string, "%d-%d-%dT%d:%d:%d.%3dZ", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, &ms);
+
+    timeinfo.tm_year -= 1900;
+    timeinfo.tm_mon -= 1;
+    time_t seconds = mktime(&timeinfo);
+    return (long long)seconds * 1000 + ms;
+}
+
+void epoch_to_iso8601(long long milliseconds, char* buffer, size_t buffer_size) {
+    time_t seconds = milliseconds / 1000;
+    long milli_remainder = milliseconds % 1000;
+    struct tm timeinfo;
+
+    localtime_r(&seconds , &timeinfo);
+
+    strftime(buffer, buffer_size, "%Y-%m-%dT%H:%M:%S", &timeinfo);
+    int offset = strlen(buffer);
+    snprintf(buffer + offset, buffer_size - offset, ".%03ldZ", milli_remainder);
+    //long long check = iso8601_to_epoch(buffer);
+    return;
+}
+
 
 
 void apiServer(UA_Client* client)
@@ -215,6 +274,9 @@ void apiServer(UA_Client* client)
             if (!strcmp(cmd->valuestring, "delmonitoritem")) {
                 handleDelMonitorItem(client, obj);
              }
+            if (!strcmp(cmd->valuestring, "writevalue")) {
+                handleWriteValue(client, obj);
+            }
 
             cJSON_Delete(obj);
         }

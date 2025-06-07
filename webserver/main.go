@@ -28,9 +28,11 @@ type NODEID struct {
 type CMDPKT struct {
     Cmd string `json:"cmd"`
     Nodeid *NODEID `json:"nodeid,omitempty"`
+    Datatype *NODEID `json:"datatype,omitempty"`
     Attributeid int `json:"attributeid,omitempty"`
     Subid int `json:"subid,omitempty"`
     Monid int `json:"monid,omitempty"`
+    WriteValue interface{} `json:"writevalue,omitempty"`
 }
 
 type RESULTPKT struct {

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include "general.h"
 #include "cJSON.h"
 
@@ -145,34 +146,8 @@ printNumber(int n, char* pos, unsigned char min_digits) {
     return len;
 }
 
-void dateTimeToString(UA_DateTime d, char* buffer) {
-    UA_DateTimeStruct tSt = UA_DateTime_toStruct(d);
-    char* pos = buffer;
-    pos += printNumber(tSt.year, pos, 4);
-    *(pos++) = '-';
-    pos += printNumber(tSt.month, pos, 2);
-    *(pos++) = '-';
-    pos += printNumber(tSt.day, pos, 2);
-    *(pos++) = 'T';
-    pos += printNumber(tSt.hour, pos, 2);
-    *(pos++) = ':';
-    pos += printNumber(tSt.min, pos, 2);
-    *(pos++) = ':';
-    pos += printNumber(tSt.sec, pos, 2);
-    *(pos++) = '.';
-    pos += printNumber(tSt.milliSec, pos, 3);
-    pos += printNumber(tSt.microSec, pos, 3);
-    pos += printNumber(tSt.nanoSec, pos, 3);
-    pos--;
-    while (*pos == '0')
-        pos--;
-    if (*pos == '.')
-        pos--;
 
-    *(++pos) = 'Z';
-    *(++pos) = 0;
-    //UA_String str = { ((uintptr_t)pos - (uintptr_t)buffer) + 1, (UA_Byte*)buffer };
-}
+
 
 int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON* jsonParentNode) {
     if (!p) {
@@ -188,58 +163,135 @@ int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON*
         arrayLength = 1;
     }
     if (dt->typeKind == UA_DATATYPEKIND_BOOLEAN) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Boolean*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Boolean*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Boolean*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_SBYTE) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_SByte*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_SByte*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_SByte*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_BYTE) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Byte*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Byte*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Byte*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_INT16) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Int16*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Int16*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Int16*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_UINT16) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_UInt16*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_UInt16*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_UInt16*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_INT32) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Int32*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Int32*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Int32*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_UINT32) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_UInt32*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_UInt32*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_UInt32*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_INT64) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = (double)(((UA_Int64*)p)[i]);
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key,(double) ((UA_Int64*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Int64*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_UINT64) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = (double)(((UA_UInt64*)p)[i]);
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, (double)((UA_UInt64*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_UInt64*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_FLOAT) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Float*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Float*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Float*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_DOUBLE) {
-        for (int i = 0; i < arrayLength; i++) {
-            item[i] = ((UA_Double*)p)[i];
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Double*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Double*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_STRING) {
@@ -259,25 +311,56 @@ int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON*
             }
             cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
-        free(item);
-        return 0;
     }
     else if (dt->typeKind == UA_DATATYPEKIND_DATETIME) {
-        char buffer[128];
+        char buf[128];
         if (isScalar == 1) {
-            dateTimeToString(((UA_DateTime*)p)[0], buffer);
-            cJSON_AddStringToObject(jsonParentNode, key, buffer);
+            long long secSinceUnixEpoch = (long long)(((UA_DateTime*)p)[0] / UA_DATETIME_MSEC) - (long long)(UA_DATETIME_UNIX_EPOCH / UA_DATETIME_MSEC);
+            epoch_to_iso8601(secSinceUnixEpoch, buf, sizeof(buf));
+            cJSON_AddStringToObject(jsonParentNode, key, buf);
         }
         else {
             cJSON* itemArray = cJSON_CreateArray();
             for (int i = 0; i < arrayLength; i++) {
-                dateTimeToString(((UA_DateTime*)p)[0], buffer);
-                cJSON_AddItemToArray(itemArray, cJSON_CreateString(buffer));
+                long long secSinceUnixEpoch = (long long)(((UA_DateTime*)p)[i] / UA_DATETIME_MSEC) - (long long)(UA_DATETIME_UNIX_EPOCH / UA_DATETIME_MSEC);
+                epoch_to_iso8601(secSinceUnixEpoch, buf, sizeof(buf));
+                cJSON_AddItemToArray(itemArray, cJSON_CreateString(buf));
             }
             cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
-        free(item);
-        return 0;
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_BYTESTRING) {
+        //UA_String
+        if (isScalar == 1) {
+            size_t length = ((UA_ByteString*)p)[0].length ;
+            char* temp = bytes_to_hex(((UA_ByteString*)p)[0].data, length);
+            cJSON_AddStringToObject(jsonParentNode, key, temp);
+            free(temp);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                size_t length = ((UA_ByteString*)p)[0].length ;
+                char* temp = bytes_to_hex(((UA_ByteString*)p)[i].data, length);
+                cJSON_AddItemToArray(itemArray, cJSON_CreateString(temp));
+                free(temp);
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
+        }
+    }
+    else if(dt->typeKind == UA_DATATYPEKIND_NODEID){
+        if (isScalar == 1) {
+            cJSON* jnodeid = nodeIdToJson(((UA_NodeId*)p)[0]);
+            cJSON_AddItemToObject(jsonParentNode, key, jnodeid);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON* jnodeid = nodeIdToJson(((UA_NodeId*)p)[i]);
+                cJSON_AddItemToArray(itemArray, jnodeid);
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
+        }
     }
     else if (dt->typeKind == UA_DATATYPEKIND_LOCALIZEDTEXT) {
         char temp_locale[128];
@@ -306,24 +389,25 @@ int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON*
             }
             cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
-        free(item);
-        return 0;
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_ENUM) {
+        if (isScalar == 1) {//scalar
+            cJSON_AddNumberToObject(jsonParentNode, key, ((UA_Int32*)p)[0]);
+        }
+        else {
+            cJSON* itemArray = cJSON_CreateArray();
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber (((UA_Int32*)p)[i]));
+            }
+            cJSON_AddItemToObject(jsonParentNode, key, itemArray);
+        }
     }
     else {
         printf("unsupport type %d @extractValue\n", dt->typeKind);
         free(item);
         return -1;
     }
-    if (isScalar == 1) {//scalar
-        cJSON_AddNumberToObject(jsonParentNode, key, item[0]);
-    }
-    else {
-        cJSON* itemArray = cJSON_CreateArray();
-        for (int i = 0; i < arrayLength; i++) {
-            cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(item[i]));
-        }
-        cJSON_AddItemToObject(jsonParentNode, key, itemArray);
-    }
+
     free(item);
     return 0;
 }
@@ -381,7 +465,7 @@ void extractComplexDataTypeArray(void* pData, const UA_DataType* type , size_t a
         extractComplexDataType(pData, type, "", jsonValueNodeArray);
         pData = ((char*)pData) + type->memSize;
     }
-    cJSON_AddItemToObject(jsonParentNode, "value", jsonValueNodeArray);
+    cJSON_AddItemToObject(jsonParentNode, key, jsonValueNodeArray);
 }
 
 void extractDataType(UA_Variant* value, cJSON* jsonParentNode) {
@@ -400,6 +484,349 @@ void extractDataType(UA_Variant* value, cJSON* jsonParentNode) {
     } else {
         extractComplexDataTypeArray(pData, value->type,value->arrayLength, "value", jsonParentNode);
         pData = ((char*)pData) + (value->type->memSize * value->arrayLength);
+    }
+
+
+}
+
+
+
+int encodeValue(void* p, UA_DataType* dt, size_t arrayLength,  cJSON* jSrc) {
+    printf("dt %d\n", dt->typeKind);
+    if (!p) {
+        printf("Empty ptr\n");
+        return 0;
+    }
+
+    int isScalar = ((arrayLength == 0) ? 1 : 0);
+
+    if (arrayLength == 0) {
+        arrayLength = 1;
+    }
+    if (dt->typeKind == UA_DATATYPEKIND_BOOLEAN) {
+        if (isScalar) {
+            ((UA_Boolean*)p)[0] = (UA_Boolean)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Boolean*)p)[i] = (UA_Boolean)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_SBYTE) {
+        if (isScalar) {
+            ((UA_SByte*)p)[0] = (UA_SByte)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_SByte*)p)[i] = (UA_SByte)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_BYTE) {
+        if (isScalar) {
+            ((UA_Byte*)p)[0] = (UA_Byte)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Byte*)p)[i] = (UA_Byte)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_INT16) {
+        if (isScalar) {
+            ((UA_Int16*)p)[0] = (UA_Int16)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Int16*)p)[i] = (UA_Int16)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_UINT16) {
+        if (isScalar) {
+            ((UA_UInt16*)p)[0] = (UA_UInt16)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_UInt16*)p)[i] = (UA_UInt16)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_INT32) {
+        if (isScalar) {
+            ((UA_Int32*)p)[0] = (UA_Int32)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Int32*)p)[i] = (UA_Int32)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_UINT32) {
+        if (isScalar) {
+            ((UA_UInt32*)p)[0] = (UA_UInt32)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_UInt32*)p)[i] = (UA_UInt32)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_INT64) {
+        if (isScalar) {
+            ((UA_Int64*)p)[0] = (UA_Int64)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                (((UA_Int64*)p)[i]) = (UA_Int64)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_UINT64) {
+        if (isScalar) {
+            ((UA_UInt64*)p)[0] = (UA_UInt64)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                (((UA_UInt64*)p)[i]) = (UA_UInt64)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_FLOAT) {
+        if (isScalar) {
+            ((UA_Float*)p)[0] = (UA_Float)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Float*)p)[i] = (UA_Float)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_DOUBLE) {
+        if (isScalar) {
+            ((UA_Double*)p)[0] = (UA_Double)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Double*)p)[i] = (UA_Double)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_STRING) {
+        //UA_String
+        if (isScalar == 1) {
+            if (jSrc->valuestring) {
+                ((UA_String*)p)[0].data = malloc(strlen(jSrc->valuestring));
+                memcpy(((UA_String*)p)[0].data, jSrc->valuestring, strlen(jSrc->valuestring));
+                ((UA_String*)p)[0].length = strlen(jSrc->valuestring);
+            }
+            else { //null
+                ((UA_String*)p)[0].data = 0;
+                 ((UA_String*)p)[0].length = 0;
+            }
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                if (jSrc->valuestring) {
+                    cJSON* item = cJSON_GetArrayItem(jSrc, i);
+                    ((UA_String*)p)[i].data = malloc(strlen(item->valuestring));
+                    memcpy(((UA_String*)p)[i].data, item->valuestring, strlen(item->valuestring));
+                    ((UA_String*)p)[i].length = strlen(item->valuestring);
+                }
+                else {
+                    ((UA_String*)p)[i].data = 0;
+                    ((UA_String*)p)[i].length = 0;
+                }
+               
+            }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_DATETIME) {
+
+        if (isScalar == 1) {
+            UA_DateTime d = iso8601_to_epoch(jSrc->valuestring);
+            d =( d * UA_DATETIME_MSEC )+ UA_DATETIME_UNIX_EPOCH;
+            ((UA_DateTime*)p)[0] = d;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON* item = cJSON_GetArrayItem(jSrc, i);
+                UA_DateTime d = iso8601_to_epoch(item->valuestring);
+                d = (d * UA_DATETIME_MSEC) + UA_DATETIME_UNIX_EPOCH;
+                ((UA_DateTime*)p)[i] = d;
+             }
+        }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_BYTESTRING) {
+        //UA_String
+        if (isScalar == 1) {
+            size_t length = 0;
+            char * temp = hex_to_bytes(jSrc->valuestring, &length);
+            ((UA_String*)p)[0].data = malloc(length);
+            memcpy(((UA_String*)p)[0].data, temp, length);
+            ((UA_String*)p)[0].length = length;
+            free(temp);
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                cJSON* item = cJSON_GetArrayItem(jSrc, i);
+                size_t length = 0;
+                char* temp = hex_to_bytes(item->valuestring, &length);
+                ((UA_String*)p)[i].data = malloc(length);
+                memcpy(((UA_String*)p)[i].data, temp, length);
+                ((UA_String*)p)[i].length = length;
+                free(temp);
+
+            }
+        }
+        }
+    else if (dt->typeKind == UA_DATATYPEKIND_NODEID) {
+            if (isScalar == 1) {
+                ((UA_NodeId*)p)[0] = jsonToNodeIdAlloc(jSrc);
+             }
+            else {
+               
+                for (int i = 0; i < arrayLength; i++) {
+                    cJSON* item = cJSON_GetArrayItem(jSrc, i);
+                    ((UA_NodeId*)p)[i] = jsonToNodeIdAlloc(item);
+                }
+            }
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_LOCALIZEDTEXT) {
+
+        if (isScalar == 1) {
+
+            cJSON* localeObj = cJSON_GetObjectItem(jSrc,"locale");
+            cJSON* textObj = cJSON_GetObjectItem(jSrc, "text");
+            ((UA_LocalizedText*)p)[0].locale.data = malloc(strlen(localeObj->valuestring));
+            ((UA_LocalizedText*)p)[0].text.data = malloc(strlen(textObj->valuestring));
+            memcpy(((UA_LocalizedText*)p)[0].locale.data, localeObj->valuestring, strlen(localeObj->valuestring));
+            memcpy(((UA_LocalizedText*)p)[0].text. data, textObj->valuestring, strlen(textObj->valuestring));
+            ((UA_LocalizedText*)p)[0].locale.length = strlen(localeObj->valuestring);
+            ((UA_LocalizedText*)p)[0].text.length = strlen(textObj->valuestring);
+        }
+        else {
+             for (int i = 0; i < arrayLength; i++) {
+                cJSON* item = cJSON_GetArrayItem(jSrc, i);
+                cJSON* localeObj = cJSON_GetObjectItem(item, "locale");
+                cJSON* textObj = cJSON_GetObjectItem(item, "text");
+                ((UA_LocalizedText*)p)[i].locale.data = malloc(strlen(localeObj->valuestring));
+                ((UA_LocalizedText*)p)[i].text.data = malloc(strlen(textObj->valuestring));
+                memcpy(((UA_LocalizedText*)p)[i].locale.data, localeObj->valuestring, strlen(localeObj->valuestring));
+                memcpy(((UA_LocalizedText*)p)[i].text.data, textObj->valuestring, strlen(textObj->valuestring));
+                ((UA_LocalizedText*)p)[i].locale.length = strlen(localeObj->valuestring);
+                ((UA_LocalizedText*)p)[i].text.length = strlen(textObj->valuestring);
+            }
+
+        }
+
+    }
+    else if (dt->typeKind == UA_DATATYPEKIND_ENUM) {
+        if (isScalar) {
+            ((UA_Enumeration*)p)[0] = (UA_Enumeration)jSrc->valueint;
+        }
+        else {
+            for (int i = 0; i < arrayLength; i++) {
+                ((UA_Enumeration*)p)[i] = (UA_Enumeration)cJSON_GetArrayItem(jSrc, i)->valueint;
+            }
+        }
+    }
+    else {
+        printf("unsupport type %d @encodeValue\n", dt->typeKind);
+        return -1;
+    }
+
+
+    return 0;
+}
+
+void encodeComplexDataType(void* pData, const UA_DataType* type,  cJSON* jSrc) {
+    UA_DataTypeMember* dtm = type->members;
+    UA_UInt32 dtmSize = type->membersSize;
+    for (UA_UInt32 i = 0; i < dtmSize; i++) {
+        int isArray = dtm[i].isArray;
+        pData = (char*)pData + dtm[i].padding;
+        UA_UInt32 type = dtm[i].memberType->typeKind;
+        char* name = (char*)dtm[i].memberName;
+        cJSON* target = cJSON_GetObjectItem(jSrc, name);
+        if (cJSON_IsArray(target)) {
+            size_t arrayLength = cJSON_GetArraySize(target);
+            *((size_t*)pData) = arrayLength;
+            printf("arraySize : %ld | dataTypeKind : %d\n", (long)arrayLength, type);
+            pData = (char*)pData + sizeof(size_t);
+            void* arrayPtr = (void*)malloc(dtm[i].memberType->memSize * arrayLength);//TODO : solve leak
+            *((void**)(pData)) = arrayPtr;
+            
+            if (arrayLength == 0) {//null ptr array
+                arrayPtr = 0;
+            }
+            printf("arrayPtr : %p\n", arrayPtr);
+            if (dtm[i].memberType->membersSize > 0) {
+                printf("untest condition!!!!\n");
+                encodeComplexDataTypeArray(arrayPtr, dtm[i].memberType, arrayLength, target);
+            }
+            else {
+                encodeValue(arrayPtr, (UA_DataType*)dtm[i].memberType, arrayLength,  target);
+            }
+            pData = ((char*)pData) + sizeof(void*);
+        }
+        else {
+            printf("scalar | dataKind : %d\n", type);
+            if (dtm[i].memberType->membersSize > 0) {
+                encodeComplexDataType(pData, dtm[i].memberType,  target);
+            }
+            else {
+                encodeValue(pData, (UA_DataType*)dtm[i].memberType, 0, target);
+            }
+            pData = ((char*)pData) + dtm[i].memberType->memSize;
+        }
+    }
+    return;
+}
+
+void encodeComplexDataTypeArray(void* pData, const UA_DataType* type, size_t arrayLength,  cJSON* jArray) {
+
+    for (int k = 0; k < arrayLength; k++) {
+        cJSON* item = cJSON_GetArrayItem(jArray, k);
+        encodeComplexDataType(pData, type, item);
+        pData = ((char*)pData) + type->memSize;
+    }
+}
+
+void encodeDataType(cJSON* jSrc , UA_Variant* value, const UA_DataType* type) {
+    UA_DataTypeMember* dtm = type->members;
+    UA_UInt32 dtmSize = type->membersSize;
+    value->type = type;
+    value->arrayDimensionsSize = 0;
+    value->arrayDimensions = 0;
+    value->storageType = UA_VARIANT_DATA;
+    cJSON* target = jSrc;
+    if (dtmSize == 0) {
+        if (!cJSON_IsArray(target)) {
+            value->arrayLength = 0;
+            value->data = malloc(value->type->memSize);
+        }
+        else {
+            value->arrayLength = cJSON_GetArraySize(target);
+            value->data = malloc(value->type->memSize*value->arrayLength);
+        }
+        
+        encodeValue(value->data, (UA_DataType*)value->type, value->arrayLength, target);
+        return;
+    }
+
+    if (!cJSON_IsArray(target)) {//scalar
+
+        value->arrayLength = 0;
+        value->data = malloc(value->type->memSize);
+        encodeComplexDataType(value->data, value->type, target);
+
+    }
+    else {
+        value->arrayLength = cJSON_GetArraySize(target);
+        value->data = malloc(value->type->memSize * value->arrayLength);
+        encodeComplexDataTypeArray(value->data,value->type,value->arrayLength, target);
     }
 }
 
@@ -534,20 +961,51 @@ void retriveVariableAttribute(UA_Client* client, UA_NodeId nodeId, cJSON* root) 
     UA_Variant value; /* Variants can hold scalar values and arrays of any type */
     UA_Variant_init(&value);
     UA_StatusCode retval = UA_Client_readValueAttribute(client, nodeId, &value);
-    cJSON* jsonValueNode = cJSON_CreateObject();
-    if (retval == UA_STATUSCODE_GOOD && value.data != 0) {
+     if (retval == UA_STATUSCODE_GOOD && value.data != 0) {
         //const UA_DataType* type = UA_findDataTypeWithCustom(&dt, cc->customDataTypes);
         if (value.type->typeKind == UA_DATATYPEKIND_EXTENSIONOBJECT) {
             /* if don't have customDataTypes , the raw data will stored at eo->content.encoded.body.data*/
             UA_ExtensionObject* eo = (UA_ExtensionObject*)value.data;
-            cJSON_AddStringToObject(jsonValueNode, "FAIL", "unrecognize datatype!");
+            cJSON_AddStringToObject(root, "value", "unrecognize datatype!");
             printf("TODO: extract value.data\n");
         }
         else {
-            extractDataType(&value, jsonValueNode);
+            extractDataType(&value, root);
+
+            ///////////
+#if 0
+
+            cJSON* jsonValueNode = cJSON_GetObjectItem(root,"value");
+            char* b = cJSON_Print(jsonValueNode);
+            printf("str1 = %s\n", b);
+            free(b);
+
+            cJSON* mip = cJSON_GetObjectItem(jsonValueNode, "devIP");
+            free(mip->valuestring);
+            mip->valuestring = general_strdup("mytest");
+
+
+            UA_Variant newV;
+            encodeDataType(jsonValueNode, &newV, value.type);
+
+            cJSON* testValueNode = cJSON_CreateObject();
+            extractDataType(&newV, testValueNode);
+            char * a = cJSON_Print(testValueNode);
+            printf("str2 = %s\n",a);
+
+            UA_Client_writeValueAttribute(client, nodeId, &newV);
+
+            free(a);
+            UA_Variant_clear(&newV);
+
+            
+
+#endif
+            /////
+
+
         }
     }
-    cJSON_AddItemToObject(root, "value", jsonValueNode);
     UA_Variant_clear(&value);
     UA_Variant_init(&value);
     ////////////////////////////////////////////////////
@@ -753,6 +1211,35 @@ UA_NodeId jsonToNodeId(cJSON* nodeidObj) {
     return nodeId;
 }
 
+UA_NodeId jsonToNodeIdAlloc(cJSON* nodeidObj) {
+    UA_NodeId nodeId;
+    cJSON* nameidx = cJSON_GetObjectItem(nodeidObj, "namespaceindex");
+    cJSON* idtype = cJSON_GetObjectItem(nodeidObj, "identifiertype");
+    if (idtype->valuedouble == UA_NODEIDTYPE_NUMERIC ||
+        idtype->valuedouble == UA_NODEIDTYPE_NUMERIC + 1 ||
+        idtype->valuedouble == UA_NODEIDTYPE_NUMERIC + 2) {
+        cJSON* id = cJSON_GetObjectItem(nodeidObj, "identifier");
+        nodeId = UA_NODEID_NUMERIC((UA_UInt16)nameidx->valuedouble, (UA_UInt32)(id->valuedouble));
+    }
+    if (idtype->valuedouble == UA_NODEIDTYPE_STRING) {
+        cJSON* id = cJSON_GetObjectItem(nodeidObj, "identifier");
+        nodeId = UA_NODEID_STRING_ALLOC((UA_UInt16)nameidx->valuedouble, id->valuestring);
+    }
+    if (idtype->valuedouble == UA_NODEIDTYPE_GUID) {
+        cJSON* id = cJSON_GetObjectItem(nodeidObj, "identifier");
+        UA_Guid guid;
+        UA_String str = UA_STRING(id->valuestring);
+        UA_Guid_parse(&guid, str);
+        nodeId = UA_NODEID_GUID((UA_UInt16)nameidx->valuedouble, guid);
+    }
+    if (idtype->valuedouble == UA_NODEIDTYPE_BYTESTRING) {
+        cJSON* id = cJSON_GetObjectItem(nodeidObj, "identifier");
+        nodeId = UA_NODEID_BYTESTRING_ALLOC((UA_UInt16)nameidx->valuedouble, id->valuestring);
+    }
+    return nodeId;
+}
+
+
 int handleBrowse(UA_Client* client, cJSON* obj, cJSON* result_obj) {
     cJSON* nodeidObj = cJSON_GetObjectItem(obj, "nodeid");
     UA_NodeId nodeId = jsonToNodeId(nodeidObj);
@@ -763,7 +1250,13 @@ int handleBrowse(UA_Client* client, cJSON* obj, cJSON* result_obj) {
 int handleAddMonitorAttribute(UA_Client* client,cJSON* obj,void * socket_context) {
     cJSON* nodeidObj = cJSON_GetObjectItem(obj, "nodeid");
     UA_NodeId nodeId = jsonToNodeId(nodeidObj);
-    addMonitoredItemToVariable(client, nodeId, socket_context);
+    cJSON* attrid = cJSON_GetObjectItem(obj, "attributeid");
+    if (attrid->valueint == UA_ATTRIBUTEID_EVENTNOTIFIER) {
+        addMonitoredItemToEvent(client, nodeId, socket_context);
+    }
+    if (attrid->valueint == UA_ATTRIBUTEID_VALUE) {
+        addMonitoredItemToVariable(client, nodeId, socket_context);
+    }   
     return 0;
 }
 
@@ -782,6 +1275,21 @@ int handleDelMonitorItem(UA_Client* client, cJSON* obj) {
     return 0;
 }
 
+int handleWriteValue(UA_Client* client, cJSON* obj) {
+    cJSON* valueobj = cJSON_GetObjectItem(obj, "writevalue");
+    cJSON* nodeidObj = cJSON_GetObjectItem(obj, "nodeid");
+    UA_NodeId nodeId = jsonToNodeId(nodeidObj);
+    cJSON* datatypeObj = cJSON_GetObjectItem(obj, "datatype");
+    UA_NodeId typeId = jsonToNodeId(datatypeObj);
+    UA_Variant v;
+    UA_ClientConfig* cc = UA_Client_getConfig(client);
+    const UA_DataType* type = UA_findDataTypeWithCustom(&typeId, cc->customDataTypes);
+    encodeDataType(valueobj, &v, type);
+    writeVariable(client, nodeId, &v);
+    return 0;
+}
+
+
 struct moniterdContext *  findEmptyCtx() {
     for (int i = 0; i < sizeof(mctx) / sizeof(struct moniterdContext); i++) {
         if (!mctx[i].occupied){
@@ -797,12 +1305,7 @@ static void handler_DataChanged(UA_Client* client, UA_UInt32 subId,
     void* monContext, UA_DataValue* value)
 {
     UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Received Notification");
-    //////////Get monitored node id first
     struct moniterdContext* ctx = (struct moniterdContext*)monContext;
-
-    /////////
-
-
     void* sock_ptr = ctx->sock_ptr;
     cJSON* jsonValueNode = cJSON_CreateObject();
     UA_ClientConfig* cc = UA_Client_getConfig(client);
@@ -815,7 +1318,7 @@ static void handler_DataChanged(UA_Client* client, UA_UInt32 subId,
     else {
         extractDataType(&value->value, jsonValueNode);
     }
-    cJSON_AddStringToObject(jsonValueNode, "answertype", "ASYNC");
+    cJSON_AddStringToObject(jsonValueNode, "answertype", "ASYNC_VARIABLE");
     cJSON* jsonNode = nodeIdToJson(ctx->id);
     cJSON_AddItemToObject(jsonValueNode, "nodeid", jsonNode);
     cJSON_AddNumberToObject(jsonValueNode, "subid", subId);
@@ -874,28 +1377,181 @@ void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid,void*
             handler_DataChanged, NULL);
     if (monResponse.statusCode == UA_STATUSCODE_GOOD)
     {
-        /*TODO: clean ctx when delete monitor item*/
         ctx->subid = subId;
         ctx->moniterid = monResponse.monitoredItemId;
         ctx->sock_ptr = sock_ptr;
         ctx->id = target_nodeid;
         if (ctx->id.identifierType == UA_NODEIDTYPE_STRING || ctx->id.identifierType == UA_NODEIDTYPE_BYTESTRING) {
             char * temp = (char*)malloc(ctx->id.identifier.string.length);
-            memcpy(temp, ctx->id.identifier.string.data, ctx->id.identifier.string.length);/*TODO: prevent memory leak!!*/
+            memcpy(temp, ctx->id.identifier.string.data, ctx->id.identifier.string.length);
             ctx->id.identifier.string.data = temp;
         }
 
         ctx->occupied = true;
-        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Monitoring 'the.answer', id %u\n",
-            monResponse.monitoredItemId);
+        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Monitoring 'the.answer', id %u\n", monResponse.monitoredItemId);
 
     }
 
 }
 
-
 void deleteMonitoredItems(UA_Client * client,UA_UInt32 subid, UA_UInt32 monid)
 {
     UA_Client_MonitoredItems_deleteSingle(client, subid, monid);
     UA_Client_Subscriptions_deleteSingle(client, subid);
+}
+
+void handler_events(UA_Client* client, UA_UInt32 subId, void* subContext,
+    UA_UInt32 monId, void* monContext,
+    size_t nEventFields, UA_Variant* eventFields)
+{
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "Notification");
+    struct moniterdContext* ctx = (struct moniterdContext*)monContext;
+    cJSON* jsonValueNode = cJSON_CreateObject();
+    void* sock_ptr = ctx->sock_ptr;
+    cJSON* jsonFieldseNode = cJSON_CreateObject();
+    for (size_t i = 0; i < nEventFields; ++i) {
+        if (UA_Variant_hasScalarType(&eventFields[i], &UA_TYPES[UA_TYPES_UINT16])) {
+            UA_UInt16 severity = *(UA_UInt16*)eventFields[i].data;
+            UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "Severity: %u", severity);
+            cJSON_AddNumberToObject(jsonFieldseNode, "severity", severity);
+        }
+        else if (UA_Variant_hasScalarType(&eventFields[i], &UA_TYPES[UA_TYPES_LOCALIZEDTEXT])) {
+            UA_LocalizedText* lt = (UA_LocalizedText*)eventFields[i].data;
+            UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
+                "Message: '%.*s'", (int)lt->text.length, lt->text.data);
+            cJSON* jsonLocaleNode = cJSON_CreateObject();
+            char tempStr[1024];
+            memset(tempStr, 0, sizeof(tempStr)); memcpy(tempStr, lt->text.data, lt->text.length);
+            cJSON_AddStringToObject(jsonLocaleNode, "text", tempStr);
+            memset(tempStr, 0, sizeof(tempStr)); memcpy(tempStr, lt->locale.data, lt->locale.length);
+            cJSON_AddStringToObject(jsonLocaleNode, "locale", tempStr);
+            cJSON_AddItemToObject(jsonFieldseNode, "message", jsonLocaleNode);
+        }
+        else if (UA_Variant_hasScalarType(&eventFields[i], &UA_TYPES[UA_TYPES_DATETIME])) {
+            char buf[128];
+            UA_UtcTime d = *(UA_UtcTime*)eventFields[i].data;
+            long long secSinceUnixEpoch = (long long)(d / UA_DATETIME_MSEC) - (long long)(UA_DATETIME_UNIX_EPOCH / UA_DATETIME_MSEC);
+            epoch_to_iso8601(secSinceUnixEpoch, buf, sizeof(buf));
+            cJSON_AddStringToObject(jsonFieldseNode, "time", buf);
+        }
+        else {
+            UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
+                "Don't know how to handle type: '%s'", eventFields[i].type->typeName);
+        }
+    }
+    cJSON_AddItemToObject(jsonValueNode, "fields", jsonFieldseNode);
+    cJSON_AddStringToObject(jsonValueNode, "answertype", "ASYNC_EVENT");
+    cJSON* jsonNode = nodeIdToJson(ctx->id);
+    cJSON_AddItemToObject(jsonValueNode, "nodeid", jsonNode);
+    cJSON_AddNumberToObject(jsonValueNode, "subid", subId);
+    cJSON_AddNumberToObject(jsonValueNode, "monid", monId);
+    sendJsonObj(jsonValueNode, sock_ptr);
+    cJSON_Delete(jsonValueNode);
+}
+
+const size_t nSelectClauses = 3;
+
+static UA_SimpleAttributeOperand* setupSelectClauses(void)
+{
+    UA_SimpleAttributeOperand* selectClauses = (UA_SimpleAttributeOperand*)
+        UA_Array_new(nSelectClauses, &UA_TYPES[UA_TYPES_SIMPLEATTRIBUTEOPERAND]);
+    if (!selectClauses)
+        return NULL;
+
+    for (size_t i = 0; i < nSelectClauses; ++i) {
+        UA_SimpleAttributeOperand_init(&selectClauses[i]);
+    }
+
+    selectClauses[0].typeDefinitionId = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE);
+    selectClauses[0].browsePathSize = 1;
+    selectClauses[0].browsePath = (UA_QualifiedName*)
+        UA_Array_new(selectClauses[0].browsePathSize, &UA_TYPES[UA_TYPES_QUALIFIEDNAME]);
+    if (!selectClauses[0].browsePath) {
+        UA_SimpleAttributeOperand_delete(selectClauses);
+        return NULL;
+    }
+    selectClauses[0].attributeId = UA_ATTRIBUTEID_VALUE;
+    selectClauses[0].browsePath[0] = UA_QUALIFIEDNAME_ALLOC(0, "Message");
+
+    selectClauses[1].typeDefinitionId = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE);
+    selectClauses[1].browsePathSize = 1;
+    selectClauses[1].browsePath = (UA_QualifiedName*)
+        UA_Array_new(selectClauses[1].browsePathSize, &UA_TYPES[UA_TYPES_QUALIFIEDNAME]);
+    if (!selectClauses[1].browsePath) {
+        UA_SimpleAttributeOperand_delete(selectClauses);
+        return NULL;
+    }
+    selectClauses[1].attributeId = UA_ATTRIBUTEID_VALUE;
+    selectClauses[1].browsePath[0] = UA_QUALIFIEDNAME_ALLOC(0, "Severity");
+
+    selectClauses[2].typeDefinitionId = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE);
+    selectClauses[2].browsePathSize = 1;
+    selectClauses[2].browsePath = (UA_QualifiedName*)
+        UA_Array_new(selectClauses[2].browsePathSize, &UA_TYPES[UA_TYPES_QUALIFIEDNAME]);
+    if (!selectClauses[2].browsePath) {
+        UA_SimpleAttributeOperand_delete(selectClauses);
+        return NULL;
+    }
+    selectClauses[2].attributeId = UA_ATTRIBUTEID_VALUE;
+    selectClauses[2].browsePath[0] = UA_QUALIFIEDNAME_ALLOC(0, "Time");
+
+
+    return selectClauses;
+}
+
+void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr){
+    /* Create a subscription */
+    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
+    UA_CreateSubscriptionResponse response = UA_Client_Subscriptions_create(client, request,
+        NULL, NULL, NULL);
+    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+        printf("error @ addMonitoredItemToEvent\n");
+        return ;
+    }
+    UA_UInt32 subId = response.subscriptionId;
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "Create subscription succeeded, id %u", subId);
+
+    /* Add a MonitoredItem */
+    UA_MonitoredItemCreateRequest item;
+    UA_MonitoredItemCreateRequest_init(&item);
+    item.itemToMonitor.nodeId = target_nodeid;
+    item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
+    item.monitoringMode = UA_MONITORINGMODE_REPORTING;
+
+    UA_EventFilter filter;
+    UA_EventFilter_init(&filter);
+    filter.selectClauses = setupSelectClauses();
+    filter.selectClausesSize = nSelectClauses;
+
+    item.requestedParameters.filter.encoding = UA_EXTENSIONOBJECT_DECODED;
+    item.requestedParameters.filter.content.decoded.data = &filter;
+    item.requestedParameters.filter.content.decoded.type = &UA_TYPES[UA_TYPES_EVENTFILTER];
+
+    struct moniterdContext* ctx = findEmptyCtx();
+    UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(client, subId,
+            UA_TIMESTAMPSTORETURN_BOTH, item, ctx, handler_events, NULL);
+
+    if (result.statusCode == UA_STATUSCODE_GOOD)
+    {
+        ctx->subid = subId;
+        ctx->moniterid = result.monitoredItemId;
+        ctx->sock_ptr = sock_ptr;
+        ctx->id = target_nodeid;
+        if (ctx->id.identifierType == UA_NODEIDTYPE_STRING || ctx->id.identifierType == UA_NODEIDTYPE_BYTESTRING) {
+            char* temp = (char*)malloc(ctx->id.identifier.string.length);
+            memcpy(temp, ctx->id.identifier.string.data, ctx->id.identifier.string.length);
+            ctx->id.identifier.string.data = temp;
+        }
+        ctx->occupied = true;
+        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Monitoring 'the.answer', id %u\n", result.monitoredItemId);
+
+    }
+    //TODO: if following code correct??
+    UA_MonitoredItemCreateResult_clear(&result);
+    UA_Array_delete(filter.selectClauses, nSelectClauses, &UA_TYPES[UA_TYPES_SIMPLEATTRIBUTEOPERAND]);
+    ////
+}
+
+void writeVariable(UA_Client* client, UA_NodeId target_nodeid,const UA_Variant * p) {
+    UA_Client_writeValueAttribute(client, target_nodeid, p);
 }

@@ -28,7 +28,7 @@ function addOrUpdateNode(data,parentNode){
         alert("idx should be unique");
     }
     if(data.idx == "nodeclass"){
-        data.value = getNodeClassDisplay(data.value)
+        data.value = data.value;//getNodeClassDisplay(data.value)
     }
 
 
@@ -46,7 +46,11 @@ function rip(parentNode,obj){
     if(Array.isArray(obj)){
         for(let i = 0 ; i < obj.length ; i++){
             if(typeof(obj[i]) == "object"){
-                let childNode = addOrUpdateNode({title : "[" + i + "]", type:"structure"  , idx : parentNode.data.key + "_" + i},parentNode)
+                let objtype = "structure"
+                if( Array.isArray(obj[i]) ){
+                    objtype = "array"
+                } 
+                let childNode = addOrUpdateNode({title : "[" + i + "]", type : objtype  , idx : parentNode.data.key + "_" + i},parentNode)
                 rip(childNode,obj[i]);
             } else {
                 addOrUpdateNode({title : "[" + i + "]" , type:"instance" , value : obj[i] , idx : parentNode.data.key + "_" + i },parentNode)
@@ -64,7 +68,11 @@ function rip(parentNode,obj){
                     addOrUpdateNode({title : key , type:"instance" , value : "null" , idx:key},parentNode)
                     //parentNode.addChildren({title : key , type:"instance" , value : "null" , idx : key },"")
                 } else {
-                    let childNode =  addOrUpdateNode({title : key , type:"structure" ,idx : key  },parentNode)
+                    let objtype = "structure"
+                    if(Array.isArray(value)){
+                        objtype = "array"
+                    }
+                    let childNode =  addOrUpdateNode({title : key , type : objtype , idx : key  },parentNode)
                     rip(childNode,value);
                 }
             } else {
@@ -178,4 +186,62 @@ function buildContentTable(){
     opcuaContent.clear()
     rip( opcuaContent , obj);
     opcuaContent.expandAll()
+}
+
+function buildObject(){
+
+    function buildChildObj(node,parentObj){
+        let child = node.getFirstChild();
+        if(child == null) return;
+        while(1){
+            let idx = child.data.idx
+            let type = child.type
+            if(type == "instance"){
+                if( Array.isArray( parentObj )){
+                    parentObj.push( parseInt(child.data.value) )//must be number
+                } else {
+                    parentObj[idx] = child.data.value
+                }
+            }
+            if(type == "structure"){
+                let obj = {}
+                buildChildObj(child , obj)
+                if( Array.isArray( parentObj )){
+                    parentObj.push( obj )
+                } else {
+                    parentObj[idx] = obj
+                }
+            }
+            if(type == "array"){
+                let obj = []
+                buildChildObj(child , obj)
+                if( Array.isArray( parentObj )){
+                    parentObj.push( obj )
+                } else {
+                    parentObj[idx] = obj
+                }
+            }
+            child = child.getNextSibling();
+            if(child == null){
+                return;
+            }
+        }
+    }
+    let pkt = {}
+    pkt.writevalue = {}
+    let nodes = opcuaContent.findAll("value");
+    buildChildObj(nodes[0],pkt.writevalue)
+
+    pkt.nodeid = {}
+    nodes = opcuaContent.findAll("nodeid");
+    buildChildObj(nodes[0],pkt.nodeid)
+
+    pkt.datatype = {}
+    nodes = opcuaContent.findAll("datatype");
+    buildChildObj(nodes[0],pkt.datatype)
+
+    pkt.cmd = "writevalue"
+
+    console.log(pkt)
+    return pkt
 }

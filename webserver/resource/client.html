@@ -60,6 +60,7 @@
 
           types: {
               structure: { icon: "bi bi-diagram-3", colspan: true },
+              array : { icon : "bi bi-bricks" , colspan: true },
               instance: { icon: "bi bi-microsoft-teams" },
           },
           columns: [
@@ -124,6 +125,7 @@
 
           types: {
               structure: { icon: "bi bi-diagram-3", colspan: true },
+              array : { icon : "bi bi-bricks" , colspan: true },
               instance: { icon: "bi bi-microsoft-teams" },
           },
           columns: [
@@ -186,31 +188,46 @@
           },
           types: {
               structure: { icon: "bi bi-diagram-3", colspan: true },
+              array : { icon : "bi bi-bricks" , colspan: true },
               instance: { icon: "bi bi-microsoft-teams" },
           },
           columns: [
             { title: "Attribute", id: "*", width: 40 },
             { title: "Value", id: "value", width: 60 },
           ],
+          change: function (e) {
+            const util = e.util;
+            const node = e.node;
+            const info = e.info;
+            const colId = info.colId;
+            return util.setTimeoutPromise(() => {
+              node.data[colId] = util.getValueFromElem(e.inputElem, true);
+            }, 500);
+          },
           columnsResizable: true,
           columnsSortable: false,        
           render: function (e) {
               // console.log(e.type, e.isNew, e);
               const node = e.node;
-              // const util = e.util;
+              const util = e.util;
               // Render formatted data values for all columns
               for (const col of Object.values(e.renderColInfosById)) {
                   // Assumption: we named column.id === node.data.NAME
-                  const val = node.data[col.id];
+                  let val = node.data[col.id];
+                  if(node.data['idx'] == "nodeclass"){
+                      val = getNodeClassDisplay( node.data[col.id] )
+                  }
+
                   switch (col.id) {
                       case "value":
-                      {
-                          col.elem.textContent = val;
-                      }
-                      break;
+                          if (e.isNew) {
+                              col.elem.innerHTML = '<input type="text" tabindex="-1">';
+                          }              
+                          util.setValueToElem(col.elem, val);
+                          break;
                       default:
-                         // Assumption: we named column.id === node.data.NAME
-                         col.elem.textContent = val;
+                          // Assumption: we named column.id === node.data.NAME
+                          col.elem.textContent = val;
                           break;
                   }
               }
