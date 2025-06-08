@@ -139,6 +139,12 @@ function handleObjectResonse(obj){
     hasEventSourceNode.identifiertype = UA_NODEIDTYPE_NUMERIC;
     hasEventSourceNode.identifier = UA_NS0ID_HASEVENTSOURCE
 
+    hasModelingRule = {}
+    hasModelingRule.namespaceindex = 0
+    hasModelingRule.identifiertype = UA_NODEIDTYPE_NUMERIC;
+    hasModelingRule.identifier = UA_NS0ID_HASMODELLINGRULE
+
+
     for (const [key, value] of Object.entries(obj)) {
         nodes[0].data[key] = value
         //console.log(`${key}: ${value}`);
@@ -154,6 +160,10 @@ function handleObjectResonse(obj){
         if( cmpNodeID(hasEventSourceNode,obj.references[i].reftype)){
             continue;
         }
+        if( cmpNodeID(hasModelingRule,obj.references[i].reftype)){
+            continue;
+        }
+
 
         obj.references[i].title = obj.references[i].displayname.text;
         nodes[0].addChildren(obj.references[i],"")

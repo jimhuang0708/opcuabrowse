@@ -202,6 +202,7 @@
             const colId = info.colId;
             return util.setTimeoutPromise(() => {
               node.data[colId] = util.getValueFromElem(e.inputElem, true);
+              writeValue()
             }, 500);
           },
           columnsResizable: true,
