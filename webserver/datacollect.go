@@ -96,13 +96,17 @@ func ConnectOpcua(cmdCH chan string,resultCH chan string) {
     conn.SetWriteBuffer(1024 * 1024)
     reader := bufio.NewReader(conn)
     for {
-        conn.SetReadDeadline(time.Now().Add( time.Millisecond * 200 ))
+        conn.SetReadDeadline(time.Now().Add( time.Millisecond * 5000 ))
         /*TODO: debug seems not work as expected,the json string still
           have chance will be divded into serveral segment*/
         jsonMsg , err := reader.ReadString(byte(0))
         if err != nil {
             if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
                 // Handle timeout
+                if(len(jsonMsg) > 0 ){
+                    fmt.Printf("got incomplete dat but timeout(5 seconds)!\n");
+                }
+                continue
             } else {
                 // Handle other errors
                 fmt.Printf("tcp readlen err : %v | msg : %s\n" ,err,jsonMsg)

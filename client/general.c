@@ -469,6 +469,12 @@ void extractComplexDataTypeArray(void* pData, const UA_DataType* type , size_t a
 }
 
 void extractDataType(UA_Variant* value, cJSON* jsonParentNode) {
+
+    if (value->data == 0) {
+        cJSON_AddNullToObject(jsonParentNode, "value");
+        return;
+    }
+
     UA_DataTypeMember* dtm = value->type->members;
     UA_UInt32 dtmSize = value->type->membersSize;
     void* pData = value->data;
@@ -961,9 +967,11 @@ void retriveVariableAttribute(UA_Client* client, UA_NodeId nodeId, cJSON* root) 
     UA_Variant value; /* Variants can hold scalar values and arrays of any type */
     UA_Variant_init(&value);
     UA_StatusCode retval = UA_Client_readValueAttribute(client, nodeId, &value);
-     if (retval == UA_STATUSCODE_GOOD && value.data != 0) {
+     if (retval == UA_STATUSCODE_GOOD ) {
+
+
         //const UA_DataType* type = UA_findDataTypeWithCustom(&dt, cc->customDataTypes);
-        if (value.type->typeKind == UA_DATATYPEKIND_EXTENSIONOBJECT) {
+        if (value.type && value.type->typeKind == UA_DATATYPEKIND_EXTENSIONOBJECT) {
             /* if don't have customDataTypes , the raw data will stored at eo->content.encoded.body.data*/
             UA_ExtensionObject* eo = (UA_ExtensionObject*)value.data;
             cJSON_AddStringToObject(root, "value", "unrecognize datatype!");
@@ -1309,7 +1317,7 @@ static void handler_DataChanged(UA_Client* client, UA_UInt32 subId,
     void* sock_ptr = ctx->sock_ptr;
     cJSON* jsonValueNode = cJSON_CreateObject();
     UA_ClientConfig* cc = UA_Client_getConfig(client);
-    if(value->value.type->typeKind == UA_DATATYPEKIND_EXTENSIONOBJECT){
+    if( (value->value.type) && (value->value.type->typeKind == UA_DATATYPEKIND_EXTENSIONOBJECT)){
         /* if don't have customDataTypes , the raw data will stored at eo->content.encoded.body.data*/
         UA_ExtensionObject* eo = (UA_ExtensionObject*)value->value.data;
         cJSON_AddStringToObject(jsonValueNode, "FAIL", "unrecognize datatype!");
