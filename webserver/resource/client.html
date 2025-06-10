@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html style="width:100%;height:100%">
   <head>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
     <!-- Wunderbaum CSS and Library -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/wunderbaum@0/dist/wunderbaum.min.css" />
-    <link rel="stylesheet"  href="static/bootstrap/css/bootstrap.min.css" />
     <style>
         div.wunderbaum span.wb-col {
         // overflow : inherit;
@@ -15,11 +13,14 @@
       defer
       src="https://cdn.jsdelivr.net/npm/wunderbaum@0/dist/wunderbaum.umd.min.js"
     ></script>
-    <!-- <script src="static/bootstrap/js/bootstrap.min.js"></script>-->
     <script src="static/js/def.js"></script>
     <script src="static/js/api.js"></script>
     <script src="static/js/general.js"></script>
     <script src="static/js/jquery-3.7.1.min.js"></script>
+
+    <script src="static/bootstrap/js/bootstrap.min.js"></script>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
     <script>
       document.addEventListener("DOMContentLoaded", (event) => {
         const tree = new mar10.Wunderbaum({
@@ -28,7 +29,7 @@
           init: (e) => {
               window.opcuaTree = e.tree;
               e.tree.setFocus();
-              setTimeout(function(){browseRoot()},1000);
+              setTimeout(function(){ urlModal('show') },1000);
           },
           activate: (e) => {
               browseNode(e.node.data.nodeid)
@@ -244,7 +245,11 @@
         mi.addEventListener("drop", (event) => {
             event.preventDefault();
             let obj = JSON.parse(event.dataTransfer.getData("application/x-wunderbaum-node"))
-            addMonitorAttributeVariable(obj.data.nodeid)
+            if(obj.data.nodeclass == UA_NODECLASS_VARIABLE){
+                addMonitorAttributeVariable(obj.data.nodeid)
+            } else {
+                alert("nodeclass variable only!");
+            }
         });
         let me = document.getElementById("monitor_event");
             me.addEventListener("dragover", (event) => {
@@ -264,6 +269,31 @@
   </head>
 
   <body style="width:100%;height:100%">
+
+    <div class="modal fade" id="URLModal" tabindex="-1" role="dialog" aria-labelledby="URLModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="URLModalLabel">Connect to</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="url-name" class="col-form-label">URL:</label>
+                <input type="text" class="form-control" id="urlpath">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="width:30%;height:100%;display:inline-block" id="tree" class="wb-skeleton wb-initializing wb-fade-expander"></div>
     <div style="top:0%;left:30%;width:35%;height:50%;position:absolute;display:inline-block" id="monitor_item"></div>
     <div style="top:50%;left:30%;width:35%;height:50%;position:absolute;display:inline-block" id="monitor_event"></div>

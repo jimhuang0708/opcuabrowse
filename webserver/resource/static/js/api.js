@@ -78,3 +78,11 @@ function writeValue(){
     let pkt = buildObject();
     opcuaws.send(JSON.stringify(pkt));
 }
+
+function connectTo(urlpath){
+    let pkt = {};
+    pkt.cmd = "connect"
+    pkt.url = urlpath
+    opcuaws.send(JSON.stringify(pkt));
+
+}

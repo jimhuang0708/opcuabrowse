@@ -14,6 +14,12 @@
 const char* host = "0.0.0.0";
 int port = 7000;
 
+typedef struct ThreaddData_s {
+    int s;
+    pthread_t thread_id;
+} threadDATA;
+
+
 int
 parseJson(char* org, int* orgBuflen) {
     int i = 0;
@@ -148,10 +154,94 @@ void epoch_to_iso8601(long long milliseconds, char* buffer, size_t buffer_size) 
     localtime_r(&seconds , &timeinfo);
 
     strftime(buffer, buffer_size, "%Y-%m-%dT%H:%M:%S", &timeinfo);
-    int offset = strlen(buffer);
+    size_t offset = strlen(buffer);
     snprintf(buffer + offset, buffer_size - offset, ".%03ldZ", milli_remainder);
     //long long check = iso8601_to_epoch(buffer);
     return;
+}
+
+void* threadFunction(void* p)
+{
+    struct moniterdContext mctx[MCTX_COUNT];
+    threadDATA* data = (threadDATA*)p;
+    int s = data->s;
+    UA_Client* client = NULL;
+    char indata[1024] = { 0 };
+    memset(mctx, 0, sizeof(mctx));
+    while (1) {
+        int hlen = checkHeader(s);
+        if(hlen == 0) {
+            printf("not ready header\n");
+            if (client) {
+                UA_Client_run_iterate(client, 50);
+            }
+            continue;
+        }
+        if (hlen < 0) {
+            printf("socket closed\n");
+            break;
+        }
+
+        int nbytes = recv(s, indata, hlen, 0);
+        if (nbytes != hlen) {
+            close(s);
+            printf("client closed connection.\n");
+            break;
+        }
+        indata[nbytes] = 0;
+        printf("recv: %s\n", indata);
+        cJSON* obj = cJSON_Parse(indata);
+        if (obj == NULL)
+        {
+            printf("parse fail.\n");
+            //sprintf(outdata, "{ \"result\" : \"error\" }");
+            //send(new_sock, outdata, strlen(outdata) + 1 , 0);//include 0 at string end
+            continue;
+        }
+        cJSON* cmd = cJSON_GetObjectItem(obj, "cmd");
+        printf("cmd: %s\n", cmd->valuestring);
+        if(client){
+            if (!strcmp(cmd->valuestring, "browse")) {
+                cJSON* result_obj = cJSON_CreateObject();
+                handleBrowse(client, obj, result_obj);
+                cJSON_AddStringToObject(result_obj,"answertype","RESPONSE");
+                char* outstr = cJSON_Print(result_obj);
+                //include 0 at string end
+                send(s, outstr, (int)(strlen(outstr) + 1), 0);
+                free(outstr);
+                cJSON_Delete(result_obj);
+            }
+
+            if (!strcmp(cmd->valuestring, "addmonitorattribute")) {
+                handleAddMonitorAttribute(client, obj, (void*) &s,mctx);
+            }
+            if (!strcmp(cmd->valuestring, "delmonitoritem")) {
+                handleDelMonitorItem(client, obj,mctx);
+            }
+            if (!strcmp(cmd->valuestring, "writevalue")) {
+                handleWriteValue(client, obj);
+            }
+        } else {
+            if (!strcmp(cmd->valuestring, "connect")) {
+                cJSON* url = cJSON_GetObjectItem(obj, "url");
+                client = createClient(url->valuestring, mctx);
+         }
+        }
+        cJSON_Delete(obj);
+    }
+    close(s);
+    free(data);
+    if(client){
+        UA_Client_delete(client);
+    }
+    pthread_exit(NULL); 
+    return 0;
+}
+
+void threadRun(int s) {
+    threadDATA* data = (threadDATA*)malloc(sizeof(threadDATA));
+    data->s = s;
+    pthread_create(&data->thread_id, NULL, threadFunction , data);
 }
 
 
@@ -162,7 +252,6 @@ void apiServer(UA_Client* client)
     socklen_t addrlen;
     struct sockaddr_in my_addr, client_addr;
     int status;
-    char indata[1024] = {0};
     int on = 1;
 
     // create a socket
@@ -211,7 +300,7 @@ void apiServer(UA_Client* client)
         new_fd = accept(sock_fd, (struct sockaddr *)&client_addr, &addrlen);
         if(new_fd < 0){
             if (errno == EAGAIN) {
-                UA_Client_run_iterate(client, 50);
+                usleep(1000);
                 continue;
             } else {
                 perror("accept error");
@@ -226,60 +315,7 @@ void apiServer(UA_Client* client)
         }
 
         printf("connected by %s:%d\n", inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port));
-
-        while (1) {
-            int hlen = checkHeader(new_fd);
-            if(hlen == 0) {
-                printf("not ready header\n");
-                UA_Client_run_iterate(client, 50);
-                continue;
-            }
-            if (hlen < 0) {
-                printf("socket closed\n");
-                break;
-            }
-
-            int nbytes = recv(new_fd, indata, hlen, 0);
-            if (nbytes != hlen) {
-                close(new_fd);
-                printf("client closed connection.\n");
-                break;
-            }
-            indata[nbytes] = 0;
-            printf("recv: %s\n", indata);
-            cJSON* obj = cJSON_Parse(indata);
-            if (obj == NULL)
-            {
-                printf("parse fail.\n");
-                //sprintf(outdata, "{ \"result\" : \"error\" }");
-                //send(new_sock, outdata, strlen(outdata) + 1 , 0);//include 0 at string end
-                continue;
-            }
-            cJSON* cmd = cJSON_GetObjectItem(obj, "cmd");
-            printf("cmd: %s\n", cmd->valuestring);
-            if (!strcmp(cmd->valuestring, "browse")) {
-                cJSON* result_obj = cJSON_CreateObject();
-                handleBrowse(client, obj, result_obj);
-                cJSON_AddStringToObject(result_obj,"answertype","RESPONSE");
-                char* outstr = cJSON_Print(result_obj);
-                //include 0 at string end
-                send(new_fd, outstr, (int)(strlen(outstr) + 1), 0);
-                free(outstr);
-                cJSON_Delete(result_obj);
-            }
-
-            if (!strcmp(cmd->valuestring, "addmonitorattribute")) {
-                handleAddMonitorAttribute(client, obj, (void*) & new_fd);
-            }
-            if (!strcmp(cmd->valuestring, "delmonitoritem")) {
-                handleDelMonitorItem(client, obj);
-             }
-            if (!strcmp(cmd->valuestring, "writevalue")) {
-                handleWriteValue(client, obj);
-            }
-
-            cJSON_Delete(obj);
-        }
+        threadRun(new_fd);
     }
     close(sock_fd);
 

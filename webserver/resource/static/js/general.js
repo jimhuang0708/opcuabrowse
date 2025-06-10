@@ -255,3 +255,15 @@ function buildObject(){
     console.log(pkt)
     return pkt
 }
+
+function urlModal(parameter){
+    // 'show' or 'hide
+    $("#URLModal").modal(parameter)
+    $('#URLModal').off('hide.bs.modal');
+    $('#URLModal').on('hide.bs.modal', function (event) {
+        connectTo($("#urlpath")[0].value)
+        setTimeout(function(){browseRoot()},1000);
+    })
+
+}
+

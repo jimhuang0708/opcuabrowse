@@ -3,6 +3,7 @@
 #include "open62541.h"
 #include "cJSON.h"
 
+#define MCTX_COUNT 100
 struct moniterdContext {
 	int occupied;
 	int subid;
@@ -11,25 +12,25 @@ struct moniterdContext {
 	void* sock_ptr;
 };
 
+#define u8 unsigned char
 UA_ByteString loadFile(const char* const path);
 UA_StatusCode UA_Client_readDataTypeDefinitionAttribute(UA_Client* client, const UA_NodeId nodeId, UA_StructureDefinition* outDataTypeDefinition);
 void retriveVariableAttribute(UA_Client* client, UA_NodeId nodeId, cJSON* root);
 void retriveAttribute(UA_Client* client, UA_NodeId nodeId, cJSON* root);
 void retriveObjectAttribute(UA_Client* client, UA_NodeId nodeId, cJSON* root);
-void UA_Guid_to_hex(const UA_Guid* guid, unsigned char* out, UA_Boolean lower);
+void UA_Guid_to_hex(const UA_Guid* guid, u8* out, UA_Boolean lower);
 void buildCustomDataType(UA_Client* client, UA_NodeId nodeId);
-void extractCustomDataType(UA_Client* client, void* p);
 void browseRoot(UA_Client* client, cJSON* root);
-void apiServer(UA_Client* client);
+void apiServer();
 int handleBrowse(UA_Client* client,cJSON* obj, cJSON* result_obj);
-int handleAddMonitorAttribute(UA_Client* client, cJSON* obj, void* socket_context);
+int handleAddMonitorAttribute(UA_Client* client, cJSON* obj, void* socket_context, struct moniterdContext* mctx);
 void extractComplexDataTypeArray(void* pData, const UA_DataType* type, size_t arrayLength, char* key, cJSON* jsonParentNode);
-void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr);
+void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr, struct moniterdContext* mctx);
 int sendJsonObj(cJSON* result_obj, void* sock_ptr);
-int handleDelMonitorItem(UA_Client* client, cJSON* obj);
+int handleDelMonitorItem(UA_Client* client, cJSON* obj, struct moniterdContext* mctx);
 int handleWriteValue(UA_Client* client, cJSON* obj);
 void deleteMonitoredItems(UA_Client* client, UA_UInt32 subid, UA_UInt32 monid);
-void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr);
+void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr, struct moniterdContext* mctx);
 void encodeDataType(cJSON* jSrc, UA_Variant* value, const UA_DataType* type);
 void encodeComplexDataTypeArray(void* pData, const UA_DataType* type, size_t arrayLength, cJSON* jArray);
 cJSON* nodeIdToJson(UA_NodeId nodeId);
@@ -40,4 +41,5 @@ extern unsigned char* hex_to_bytes(const char* hex_str, size_t* len);
 extern void epoch_to_iso8601(long long milliseconds, char* buffer, size_t buffer_size);
 long long iso8601_to_epoch(const char* iso_string);
 void writeVariable(UA_Client* client, UA_NodeId target_nodeid, const UA_Variant* p);
+UA_Client* createClient(const char* url, struct moniterdContext* mctx);
 #endif

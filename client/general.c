@@ -4,8 +4,6 @@
 #include "cJSON.h"
 
 
-extern struct moniterdContext mctx[100];
-
 UA_ByteString
 loadFile(const char* const path) {
     UA_ByteString fileContents = UA_STRING_NULL;
@@ -253,7 +251,7 @@ int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON*
         else {
             cJSON* itemArray = cJSON_CreateArray();
             for (int i = 0; i < arrayLength; i++) {
-                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_Int64*)p)[i]));
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber((double)((UA_Int64*)p)[i]));
             }
             cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
@@ -265,7 +263,7 @@ int extractValue(void* p, UA_DataType* dt, size_t arrayLength, char* key, cJSON*
         else {
             cJSON* itemArray = cJSON_CreateArray();
             for (int i = 0; i < arrayLength; i++) {
-                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber(((UA_UInt64*)p)[i]));
+                cJSON_AddItemToArray(itemArray, cJSON_CreateNumber((double)((UA_UInt64*)p)[i]));
             }
             cJSON_AddItemToObject(jsonParentNode, key, itemArray);
         }
@@ -1255,24 +1253,24 @@ int handleBrowse(UA_Client* client, cJSON* obj, cJSON* result_obj) {
     return 0;
 }
 
-int handleAddMonitorAttribute(UA_Client* client,cJSON* obj,void * socket_context) {
+int handleAddMonitorAttribute(UA_Client* client,cJSON* obj,void * socket_context, struct moniterdContext* mctx) {
     cJSON* nodeidObj = cJSON_GetObjectItem(obj, "nodeid");
     UA_NodeId nodeId = jsonToNodeId(nodeidObj);
     cJSON* attrid = cJSON_GetObjectItem(obj, "attributeid");
     if (attrid->valueint == UA_ATTRIBUTEID_EVENTNOTIFIER) {
-        addMonitoredItemToEvent(client, nodeId, socket_context);
+        addMonitoredItemToEvent(client, nodeId, socket_context,mctx);
     }
     if (attrid->valueint == UA_ATTRIBUTEID_VALUE) {
-        addMonitoredItemToVariable(client, nodeId, socket_context);
+        addMonitoredItemToVariable(client, nodeId, socket_context,mctx);
     }   
     return 0;
 }
 
-int handleDelMonitorItem(UA_Client* client, cJSON* obj) {
+int handleDelMonitorItem(UA_Client* client, cJSON* obj, struct moniterdContext *mctx) {
     cJSON* subObj = cJSON_GetObjectItem(obj, "subid");
     cJSON* monObj = cJSON_GetObjectItem(obj, "monid");
     deleteMonitoredItems(client, (UA_UInt32)subObj->valueint, (UA_UInt32)monObj->valueint);
-    for (int i = 0; i < sizeof(mctx) / sizeof(struct moniterdContext); i++) {
+    for (int i = 0; i < MCTX_COUNT; i++) {
         if (mctx[i].moniterid == (UA_UInt32)monObj->valueint && mctx[i].subid == (UA_UInt32)subObj->valueint) {
             if (mctx[i].id.identifierType == UA_NODEIDTYPE_STRING || mctx[i].id.identifierType == UA_NODEIDTYPE_BYTESTRING) {
                 free(mctx[i].id.identifier.string.data);
@@ -1298,8 +1296,8 @@ int handleWriteValue(UA_Client* client, cJSON* obj) {
 }
 
 
-struct moniterdContext *  findEmptyCtx() {
-    for (int i = 0; i < sizeof(mctx) / sizeof(struct moniterdContext); i++) {
+struct moniterdContext *  findEmptyCtx(struct moniterdContext *mctx) {
+    for (int i = 0; i < MCTX_COUNT; i++) {
         if (!mctx[i].occupied){
             return &mctx[i];
         }
@@ -1344,7 +1342,7 @@ static void handler_DataChanged(UA_Client* client, UA_UInt32 subId,
 
 
 
-void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid,void* sock_ptr)
+void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid,void* sock_ptr, struct moniterdContext *mctx)
 {
     UA_NodeId dt;
     UA_ClientConfig* cc = UA_Client_getConfig(client);
@@ -1376,7 +1374,7 @@ void addMonitoredItemToVariable(UA_Client* client, UA_NodeId target_nodeid,void*
     monRequest.requestedParameters.queueSize = 0;
    // monRequest.itemToMonitor.attributeId = UA_ATTRIBUTEID_DISPLAYNAME;
 
-    struct moniterdContext* ctx = findEmptyCtx();
+    struct moniterdContext* ctx = findEmptyCtx(mctx);
 
     UA_MonitoredItemCreateResult monResponse =
         UA_Client_MonitoredItems_createDataChange(client, response.subscriptionId,
@@ -1507,7 +1505,7 @@ static UA_SimpleAttributeOperand* setupSelectClauses(void)
     return selectClauses;
 }
 
-void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr){
+void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* sock_ptr,struct moniterdContext* mctx){
     /* Create a subscription */
     UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
     UA_CreateSubscriptionResponse response = UA_Client_Subscriptions_create(client, request,
@@ -1535,7 +1533,7 @@ void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* s
     item.requestedParameters.filter.content.decoded.data = &filter;
     item.requestedParameters.filter.content.decoded.type = &UA_TYPES[UA_TYPES_EVENTFILTER];
 
-    struct moniterdContext* ctx = findEmptyCtx();
+    struct moniterdContext* ctx = findEmptyCtx(mctx);
     UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(client, subId,
             UA_TIMESTAMPSTORETURN_BOTH, item, ctx, handler_events, NULL);
 
@@ -1562,4 +1560,49 @@ void addMonitoredItemToEvent(UA_Client* client, UA_NodeId target_nodeid, void* s
 
 void writeVariable(UA_Client* client, UA_NodeId target_nodeid,const UA_Variant * p) {
     UA_Client_writeValueAttribute(client, target_nodeid, p);
+}
+
+UA_Client* createClient(const char * url, struct moniterdContext* mctx) {
+    UA_ByteString certificate = UA_BYTESTRING_NULL;
+    UA_ByteString privateKey = UA_BYTESTRING_NULL;
+    /* Load certificate and private key */
+    certificate = loadFile("cert/client_cert.der");
+    privateKey = loadFile("cert/client_key.der");
+    UA_Client* client = UA_Client_new();
+    UA_ClientConfig* cc = UA_Client_getConfig(client);
+    cc->securityMode = UA_MESSAGESECURITYMODE_SIGNANDENCRYPT;
+    size_t revocationListSize = 0;
+    UA_ByteString* revocationList = NULL;
+#if 0
+    size_t trustListSize = 1;
+    UA_STACKARRAY(UA_ByteString, trustList, trustListSize + 1);
+    for (size_t trustListCount = 0; trustListCount < trustListSize; trustListCount++)
+        trustList[trustListCount] = loadFile("cert/server_cert.der");
+#else
+    size_t trustListSize = 0;
+    UA_ByteString* trustList = NULL;
+#endif
+    /* With encryption enabled, the applicationUri needs to match the URI from
+    * the certificate and now we user same cert as server so....*/
+    //    UA_String_clear(&cc->clientDescription.applicationUri);
+    //    cc->clientDescription.applicationUri = UA_STRING_ALLOC("urn:open62541.server.application");
+    UA_StatusCode retval = UA_ClientConfig_setDefaultEncryption(cc, certificate, privateKey,
+        trustList, trustListSize,
+        revocationList, revocationListSize);
+
+    if (cc->certificateVerification.clear) {
+        cc->certificateVerification.clear(&cc->certificateVerification);
+    }
+    UA_CertificateVerification_AcceptAll(&cc->certificateVerification);
+    //retval = UA_Client_connect(client, "opc.tcp://192.168.51.118:14840");
+    //retval = UA_Client_connect(client, "opc.tcp://DESKTOP-ICN8DTE:53530/OPCUA/SimulationServer");
+    retval = UA_Client_connect(client, url);
+
+    if (retval != UA_STATUSCODE_GOOD) {
+        UA_Client_delete(client);
+        printf("Bad connections\n");
+        return 0;
+    }
+    
+    return client;
 }

@@ -33,6 +33,7 @@ type CMDPKT struct {
     Subid int `json:"subid,omitempty"`
     Monid int `json:"monid,omitempty"`
     WriteValue interface{} `json:"writevalue,omitempty"`
+    Url *string `json:"url,omitempty"`
 }
 
 type RESULTPKT struct {
