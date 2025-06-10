@@ -23,9 +23,9 @@ Startup your opcua server,if you don't have one for test purpose you could use o
 ```
 ./opcuaserver
 ```
-Startup opcuaclient , parameter is opcua server's url path
+Startup opcuaclient 
 ```
-./opcuaclient opc.tcp://127.0.0.1:14840
+./opcuaclient
 ```
 Startup webserver , parameter is opcuaclient's ip:7000
 ```
